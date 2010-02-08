@@ -1,0 +1,506 @@
+body {
+    font-family:arial,sans,sans-serif;font-size:12px;
+}
+
+.tblHeaderContent {
+    border-bottom:0px solid #CCCCCC;
+    border-collapse:collapse;
+    border-spacing:0;
+    border-style:none none solid;
+    table-layout:fixed;
+    width:0;
+}
+
+.tblHeaderContent tr.rShim td, .tblHeaderContent td.rShim {
+     border-bottom:0 none;
+     padding:0;
+}
+
+td.rShim {
+     border-right:1px solid #C8C8C8;
+     height:0;
+     width:35px;
+}
+
+.tblHeaderContent td.hd {
+     background-color:#C8C8C8;
+     border-right:0 none;
+     padding:0;
+}
+
+.divFrozenPanel .tblHeaderContent td.hd, .divHeaderRow .tblHeaderContent td.hd {
+     background-color:#E0E8A4;
+     border-color:#C8C8C8;
+     border-style:solid;
+     border-width:0 1px 1px 0;
+     color:#333333;
+     font-size:8pt;
+     text-align:center;
+     vertical-align:middle;
+     width:35px;
+}
+
+.divFrozenPanel {
+    border-color:#C8C8C8;
+    border-style:solid;
+    border-width:0 1px 1px 0;
+    cursor:default;
+    overflow:hidden;
+    position:absolute;
+}
+
+.divHeaderContainer .tblHeaderContent tr.hd td, .tblHeaderContent .freezebar, .tblHeaderContent .freezebarOn {
+     background-color:#E0E8A4;
+     border-color:#C8C8C8;
+     border-style:solid;
+     border-width:0 1px 1px 0;
+     color:#333333;
+     font-size:8pt;
+     text-align:center;
+     vertical-align:middle;
+}
+
+.divHeaderContainer .tblHeaderContent tr.hd td {
+     height:20px;
+}
+
+.divHeaderContainer .tblHeaderContent tr.hd td.on, .divHeaderRow .tblHeaderContent tr.on td.hd {
+     background-color:#FCD335;
+}
+
+.divHeaderContainer .tblHeaderContent tr.hd td {
+     /*border-bottom:1px solid #9FC2FD;*/
+}
+
+.divHeaderContainer .tblHeaderContent tr.hd td.first {
+     border-right:medium none;
+}
+
+.tblHeaderContent td.headerEnd {
+     background-color:#E8EEF7;
+     border:medium none;
+}
+
+.divFrozenPanel .tblHeaderContent td.hd {
+/*opacity:0.4;*/
+}
+
+body, body td, .tblHeaderContent, .tblGeneric {
+        font-size:13px;
+}
+
+.tblHeaderContent td.search {
+        background-image:url(search.gif);
+        background-position:right top;
+        background-repeat:no-repeat;
+}
+
+.tblHeaderContent TD.locked {
+     background-color:gray;
+}
+
+.tblHeaderContent TD {       
+     BORDER-RIGHT: #ccc 1px solid;      
+     PADDING-RIGHT: 3px;        
+     BORDER-TOP: 0px;   
+     PADDING-LEFT: 3px; 
+     Z-INDEX: 1;        
+     PADDING-BOTTOM: 0px;       
+     WORD-SPACING: 0px; 
+     VERTICAL-ALIGN: bottom;    
+     OVERFLOW: hidden;  
+     BORDER-LEFT: 0px;  
+     PADDING-TOP: 0px;  
+     BORDER-BOTTOM: #ccc 1px solid;     
+     WHITE-SPACE: normal;       
+     LETTER-SPACING: 0px;       
+     BACKGROUND-COLOR: #fff
+}
+
+.divMatrix {
+        background-color:#E8EEF7;
+        border-color: #EFEFEF #EFEFEF;
+        border-style:none solid solid;
+        border-width:medium 1px 1px;
+        overflow:hidden;
+        position:absolute;
+        z-index:1;
+}
+
+.divHeaderContainer {
+        border-color:#CCCCCC;
+        border-style:solid;
+        border-width:0 1px 1px 0;
+        cursor:default;
+        overflow:hidden;
+        position:absolute;
+}
+
+.columnsFrozen .divHeaderContainer, .columnsFrozen .divMainArea {
+        border-left:1px solid #CCCCCC;
+}
+.divMainArea {
+        border-color:#CCCCCC #CCCCCC #CCCCCC #CCCCCC ;
+        border-style:solid solid solid none;
+        border-width:1px 1px 0px 0px;
+        overflow:scroll;
+        position:absolute;
+        z-index:1;
+}
+
+.divHeaderRow, .divFrozenPanel {
+        -moz-background-clip:border;
+        -moz-background-inline-policy:continuous;
+        -moz-background-origin:padding;
+        background:#F0F0F0 none repeat scroll 0 0;
+        border-color:#CCCCCC;
+        border-style:solid;
+        border-width:1px 0;
+        cursor:default;
+        overflow:hidden;
+        position:absolute;
+}
+.columnsFrozen .divHeaderRow, .columnsFrozen .divFrozenPanel {
+        border-right:1px solid #CCCCCC;
+}
+
+.divHeaderRow .framesContainer {
+    margin-bottom:1px;
+}
+
+.framesContainerCells {
+    border-style:none;
+    border-width:0;
+    padding:0;
+}
+
+.framesContainer {
+    border-collapse:collapse;
+    border-style:none;
+    border-width:0;
+    margin:0;
+    padding:0;
+}
+
+.divSelObjs {
+    border-style:none;
+    overflow:visible;
+    position:absolute;
+    z-index:5;
+}
+
+.divCurrentCell {
+    -moz-box-sizing:border-box;
+    border:2px solid #124BBE;
+    font-size:1pt;
+    position:absolute;
+    z-index:6;
+}
+
+#tblMain td.hd p, .tblColumnHeader td.hd p {
+    font-size:0;
+    margin:0;
+    overflow:hidden;
+    width:0;
+}
+
+.editBoxContainer {
+    border:0 none;
+    overflow:auto;
+    padding-bottom:0;
+    padding-top:0;
+    position:absolute;
+}
+.editBox {
+    border-color:#3063C9 #A5C4FF #A5C4FF #3063C9;
+    border-style:solid;
+    border-width:2px;
+    overflow:auto;
+    padding:0 3px;
+    position:absolute;
+}
+.IE .editBox {
+    padding-top:1px;
+}
+.editBoxResizerTable {
+    border-collapse:collapse;
+    border-style:none;
+    margin:0;
+    padding:0;
+    position:absolute;
+}
+
+.divContainer {
+    border-color:#C0C0C0 #C0C0C0 #C0C0C0 C0C0C0;
+    border-style:solid solid solid none;
+    border-width:1px 1px 1px 0;
+    overflow:hidden;
+    position:relative;
+}
+
+.btnSearch {
+        float:right;
+        height:15px;
+        width:15px;
+}
+
+.divOtherUserEditing {
+    -moz-background-clip:border;
+    -moz-background-inline-policy:continuous;
+    -moz-background-origin:padding;
+    background:#000000 none repeat scroll 0 0;
+    opacity:0.3;
+}
+
+.divOtherUser {
+    -moz-box-sizing:border-box;
+    border:2px solid #3366CC;
+    font-size:1pt;
+    position:absolute;
+    z-index:6;
+}
+
+.formulaMarker {
+    background-color:#008000;
+    border-style:none;
+    border-width:0;
+    font-size:1pt;
+    opacity:0.2;
+    position:absolute;
+    z-index:6;
+}
+.toolbar-icon {
+    -moz-background-clip:border;
+    -moz-background-inline-policy:continuous;
+    -moz-background-origin:padding;
+    background:transparent url(Menu.gif) no-repeat scroll 0 0;
+    height:16px;
+    width:16px;
+}
+
+
+
+.divRange {
+    -moz-box-sizing:border-box;
+    background-color:#3366CC;
+    border-style:none;
+    border-width:0;
+    font-size:1pt;
+    opacity:0.2;
+    position:absolute;
+    z-index:5;
+}
+
+.markdown {
+        background-color:#F6F6F6;
+        border:1px solid #D7D7D7;
+        height:20px;
+        list-style-image:none;
+        list-style-position:outside;
+        list-style-type:none;
+        margin:0px;
+        padding:0;
+        position:relative;
+}
+
+.markdown li {
+        float:left;
+        list-style-image:none;
+        list-style-position:outside;
+        list-style-type:none;
+        margin:0;
+        padding:0;
+}
+
+.markdown li a {
+        /*background:transparent url(menu.gif) no-repeat scroll 0 0;*/
+        background-image:url(Menu.gif);
+        border-color:#FFFFFF #D7D7D7 #FFFFFF #FFFFFF;
+        border-style:solid;
+        border-width:1px;
+        display:block;
+        float:left;
+        height:16px;
+        width:24px;
+}
+
+.markdown-italic {
+    background-position:2px 50%;
+}
+
+.markdown-bold {
+    background-position:-57px 50%;
+}
+
+.markdown-text-color {
+    background-position:-98px 50%;
+}
+
+.markdown-highlight-color {
+    background-position:-119px 50%;
+    height:14px;
+}
+
+.markdown-function {
+    background-position:-497px 50%;
+    height:14px;
+}
+
+#headerMarker {
+    background-color:#E0E8A4;
+    border-top:1px solid #BFCAFF;
+    height:20px;
+    width:100%;
+}
+
+.cellLocationTd {
+    background-color:#E0E8A4;
+    vertical-align:top;
+    width:75px;
+}
+
+#cellLocation, #cellFormula {
+    background-color:#EDF3FE;
+    border-color:#FFFFFF;
+    border-style:none none solid;
+    border-width:0 0 1px;
+    font-family:Arial,Helvetica,Sans-serif;
+    font-size:9pt;
+    height:20px;
+    padding:2px 2px 0;
+    text-align:center;
+    width:100%;
+}
+
+#cellLocation {
+    border-bottom:0 none;
+}
+
+#cellFormula {
+    background-color:#FFFFFF;
+    overflow-x:hidden;
+    overflow-y:scroll;
+    padding:1px 0 0 4px;
+    text-align:left;
+}
+
+.divTop {
+    background-color:#000000;
+    border-style:none;
+    opacity:0;
+    overflow:hidden;
+    position:absolute;
+    z-index:7;
+}
+
+.freezeBar, .freezeBarOn {
+    height:7px;
+}
+
+.tblHeaderContent .freezeBar, .tblHeaderContent .freezeBarOn {
+    height:6px;
+    overflow:hidden;
+    padding-left:5px;
+    padding-right:5px;
+    text-align:right;
+    white-space:nowrap;
+    z-index:1;
+}
+
+/* function box */
+
+.tblInsertFunction{
+    font-size:11px;
+}
+
+.funcHeader td {
+    border-bottom:1px solid #BFCAFF;
+    font-size:8pt;
+    height:30px;
+    padding:0 5px;
+}
+
+.funcList {
+    height:85px;
+    overflow:auto;
+}
+
+.funcTable tr {
+    background-color:#FFFFFF;
+    cursor:pointer;
+}
+
+.funcTable td {
+    border-bottom:1px dotted #BFCAFF;
+    height:22px;
+    padding:0 5px;
+    white-space:nowrap;
+    font-size:11px;
+}
+
+.funcFooter {
+    height:60px;
+    padding:5px;
+    vertical-align:top;
+}        
+
+.funcSyntax{      
+    -moz-background-clip:border;
+    -moz-background-inline-policy:continuous;
+    -moz-background-origin:padding;
+    background:#FFFEA1 none repeat scroll 0 0;
+    border:2px solid #FFCC00;
+    margin:0 0 14px;
+    padding:4px 8px;
+    font-size:8pt;
+    font-weight:bold;
+    width:100%;
+}
+
+.columnResizer {
+    cursor:col-resize;
+    height:20px;
+    top:1px;
+    width:8px;
+}
+
+.divRowResize, .columnResizer {
+    background-color:#3366CC;
+    border-style:none;
+    font-size:1pt;
+    position:absolute;
+    z-index:6;
+}
+
+.ghostFreezeBar {
+    background-color:#E0E8A4;
+    position:absolute;
+    z-index:6;
+    cursor:move;
+    border-color:#CCCCCC;
+    border-style:solid;
+    border-width:0 1px 1px 0;
+}
+
+.panelStatus {
+    border-left:1px solid #C0C0C0;
+    border-bottom:1px solid #C0C0C0;
+}
+
+.panels {
+    background-color:#E8EEF7;
+    font-size:10pt;
+    overflow:hidden;
+    position:relative;
+    z-index:1;
+}
+
+.secStatus {
+    color:#676767;
+    cursor:pointer;
+    font-size:13px;
+    overflow:hidden;
+    padding-left:5px;
+}
+
+/* End of function box */

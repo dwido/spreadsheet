@@ -1,0 +1,252 @@
+<Module>
+<ModulePrefs title="Concurrency Spreadsheet" height="200" description="Concurrency Spreadsheets, you can easily create, share and edit spreadsheets online" author="David Buchbut" author_email="dwidob@gmail.com">
+    <Require feature="dynamic-height"/> 
+    <Require feature="wave-preview"/>
+</ModulePrefs>
+ 
+<Content type="html">
+<![CDATA[
+
+	<link href="http://spreadsheet.happinessbeats.com/gadget/spreadsheet.css" rel="stylesheet" type="text/css" media="screen" />
+	<link href="http://spreadsheet.happinessbeats.com/gadget/mochaui/ui.css" rel="stylesheet" type="text/css" media="screen" />
+	<script src="http://spreadsheet.happinessbeats.com/gadget/mootools-1.2.4-core.js" type="text/javascript"></script>
+	<script src="http://spreadsheet.happinessbeats.com/gadget/mootools-1.2.4.2-more.js" type="text/javascript"></script>
+	<script type="text/javascript" src="http://spreadsheet.happinessbeats.com/gadget/thewe.js"></script>
+	<script type="text/javascript" src="http://spreadsheet.happinessbeats.com/gadget/advancedformula.js"></script>
+	<script type="text/javascript" src="http://spreadsheet.happinessbeats.com/gadget/spreadsheet.js"></script>
+	<script type="text/javascript" src="http://spreadsheet.happinessbeats.com/gadget/mochaui/mocha.js"></script>
+
+<div style="z-Index:200;position:absolute;top:100px;left:30px;" id="thestate">
+</div>
+<!-- button onclick="xshowState()" style="z-Index:200;position:absolute;top:100px;left:0px;">View State</button-->
+<div>
+	<ul class="markdown">
+		<li>
+			<a class="markdown-bold" title="Bold" onclick="oSpreadsheet.btnBold_onclick()"></a>
+		</li>
+		<li>
+			<a class="markdown-italic" title="Italic" onclick="oSpreadsheet.btnItalic_onclick()"></a>
+		</li>
+		<li>
+			<a class="markdown-text-color" title="Text Color" id="btnTextColor"></a>
+		</li>
+		<li>
+			<a class="markdown-highlight-color" title="Background Color" id="btnHighlight"></a>
+		</li>
+		<li>
+			<a class="markdown-function" title="Insert Function" id="btnFunction" onclick="oSpreadsheet.showFormulaDialog()"></a>
+		</li>
+		<li>
+			<input type="checkbox" checked="true" id="heightAutoAdjust"> <span style="font-size:8pt;">Adjust gadget height</span>
+		</li>
+	</ul>
+</div>	
+<table cellspacing="0" cellpadding="0" class="appTable" style="table-layout: fixed; width: 100%;border-color:#EFEFEF" id="appTable" border="0">
+    <tbody>
+        <tr style="display:none">
+            <td>
+                <table cellspacing="0" cellpadding="0" id="headerMarker">
+                    <tbody>
+                        <tr>
+                            <td valign="middle" align="center" class="cellLocationTd" id="cellLocationTd">
+                                
+                            </td>      
+                            <td style="valign:middle;width:20px;" align="center">=</td>
+                            <td style="valign:top;">
+                                <textarea style="height: 19px;"></textarea>
+                            </td>
+                        </tr>
+                    </tbody>      
+                </table>
+            </td>
+        </tr>
+        <tr>    
+            <td>
+                <div id="divContainer" class="divContainer" style="left: 0px; top: 0px; width: 1261px; height:160px;">
+                    <div class="editBoxContainer" style="left: -156px; top: -200px; width: 10px; height: 23px; z-index: 5;">
+                    	<textarea class="editBox" 
+                    	style="position: absolute; left: 0px; top: 0px; width: 100%; height: 97%; font-size: 13px; font-family: arial,sans,sans-serif; font-weight: 400; font-style: normal; direction: ltr; text-align: left;" 
+                    	tabindex="2" sourceFieldRow="1" sourceFieldCell="1"
+                    	aria-haspopup="true" role="combobox" aria-autocomplete="list" aria-activedescendant=""></textarea>
+                	</div>
+                <input tabIndex="1" style="width:0px;height:0px;left:-100px;position:absolute;z-index:1" id="xxFocus"/>
+            	<div class="columnResizer" style="display: none; left: 1px; top: 1px;"></div>
+                    <div class="ghostFreezeBar" style="left: 0px; top: 0px;"></div>	
+                	<div class="divMatrix" style="width: 100%; height: 100%;">
+                        <div class="divMainArea" style="left: 35px; top: 51px; width: 1242px;overflow:hidden;" id="g0">
+                            <div class="divTop" style="left: 0px; top: 0px; z-index: 7;"></div>
+                            <table id="tblContent" class="tblHeaderContent" cellspacing="0" cellpadding="0" border="0" style="">
+                                <tbody>
+                                    <!--tr class="rShim"><td style="width: 0pt;" class="rShim"></td><td style="width: 120px;" class="rShim"></td><td style="width: 120px;" class="rShim"></td><td style="width: 120px;" class="rShim"></td><td style="width: 120px;" class="rShim"></td><td style="width: 120px;" class="rShim"></td><td style="width: 120px;" class="rShim"></td><td style="width: 120px;" class="rShim"></td><td style="width: 120px;" class="rShim"></td><td style="width: 120px;" class="rShim"></td><td style="width: 120px;" class="rShim"></td><td style="width: 120px;" class="rShim"></td><td style="width: 120px;" class="rShim"></td><td style="width: 120px;" class="rShim"></td><td style="width: 120px;" class="rShim"></td><td style="width: 120px;" class="rShim"></td><td style="width: 120px;" class="rShim"></td><td style="width: 120px;" class="rShim"></td><td style="width: 120px;" class="rShim"></td><td style="width: 120px;" class="rShim"></td><td style="width: 120px;" class="rShim"></td></tr>
+                                    <tr style="display: none;"><td class="hd"><p style="height: 16px;">.</p></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr-->
+                                </tbody>
+                            </table>
+                        	<div class="divCurrentCell" forParticipant="self" style="width: 122px; height: 19px; top: 37px; left: -1px;z-index:100; display:none">
+                        	</div>
+                			<!--div class="divOtherUser" style="border-color: rgb(16, 150, 24); border-width: 2px; top: 55px; left: 362px; width: 122px; height: 19px;display:none;"></div-->
+                        </div>
+                	    
+                		<div class="divFrozenPanel divHeaderRow divHeaderContainer" style="left: -1px; top: 0pt; width: 36px;">
+                			<table cellpadding="0" class="tblHeaderContent rowMarker" id="frozrowMarker">
+                			    <tbody>
+                				    <tr class="hd"><td style="height: 19px;" class="hd"></td></tr>
+                				</tbody>
+                			</table>
+                		</div>
+                        <div class="divHeaderRow" id="divHeaderRow" style="left: 0px; top: 51px; width: 36px; height: 100%;">
+                            <table class="framesContainer" style="left: 0px; top: 0px;">
+                                <tbody>
+                                    <tr>
+                                        <td class="framesContainerCells" style="">
+                                            <table cellpadding="0" class="tblHeaderContent rowMarker">
+                                                <tbody>
+                                                    <tr class="rShim"><td class="rShim"></td></tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>		
+                		<div class="divHeaderContainer" id="divHeaderContainer" style="left: 36px; top: 0px; width: 1425px;">
+                			<table class="tblHeaderContent tblColumnHeader headGrid" cellpadding="0">
+                			    <tbody>
+                			    </tbody>
+                			</table>
+                        	<div class="divCurrentCell" forParticipant="self" style="width: 122px; height: 19px; top: 37px; left: -1px;z-index:100;"></div>
+                            <!--div class="divOtherUser" style="border-color: rgb(16, 150, 24); border-width: 2px; top: 55px; left: 362px; width: 122px; height: 19px;display:none;"></div-->
+                
+                		</div>
+                        <div class="divSelObjs" style="left: 0px; top: 0px; width: 0px; height: 0px;">
+                			<div class="divRange" style="width: 363px; height: 67px; top: 146px; left: 484px; display:none;"></div>
+                			<div style="width: 2420px; height: 18px; top: 20px; left: 0pt; display: none;" class="divRange"></div>
+                			<div style="width: 0pt; height: 0pt; top: -3px; left: -3px; display: none;" class="formulaMarker"></div>
+                        </div>
+                	</div>
+                    
+                    <!-- insert function table -->
+                        <table width="100%" cellspacing="0" cellpadding="0" border="0" id="tblInsertFunction" class="tblInsertFunction">
+                            <tbody>
+                                <tr class="funcHeader">
+                                    <td>
+                                        <select onchange="fetchFunctions();" style="font-size: 9pt;" id="funcType">
+                                            <option value="Commonly Used">Commonly Used</option>
+                                            <option value="All">All</option>
+                                            <option value="Mathematical">Mathematical</option>
+                                            <option value="Date&amp;Time">Date/Time</option>
+                                            <option value="Logical">Logical</option>
+                                            <option value="Financial">Financial</option>
+                                            <option value="Statistical">Statistical</option>
+                                            <option value="Information">Information</option>
+                                            <option value="Engineering">Engineering</option>
+                                            <option value="Spreadsheet">Spreadsheet</option>
+                                            <option value="Text">Text</option>
+                                            <option value="Stock">Stock</option>
+                                        </select>
+                                    </td>
+                                    <td align="right">
+                                        <a style="text-decoration: underline; font-size: 8pt;" target="_blank" href="/functions.do">Reference</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2"> 
+                                        <div class="funcList">
+                                            <table width="100%" cellspacing="0" cellpadding="0" border="0" class="funcTable">
+                                            <tbody>
+                                                <tr  funcsyntax="SUM(number1 ;  number 2 ;  ... ;  number 20)" 
+                                                funcname="SUM" id="func" class=""><td width="60%">SUM</td>
+                                                    <td nowrap="nowrap" class="dim">Mathematical</td>
+                                                </tr>
+                                                <tr  funcsyntax="AVERAGE(Number 1 ;  Number 2 ;  ...Number 20)" funcname="AVERAGE" 
+                                                id="func" class="">
+                                                    <td width="60%">AVERAGE</td>
+                                                    <td nowrap="nowrap" class="dim">Statistical</td>
+                                                </tr>
+                                                <tr  funcsyntax="PRODUCT(number 1 to 20)" funcname="PRODUCT" 
+                                                    id="func" class="">
+                                                    <td width="60%">PRODUCT</td>
+                                                    <td nowrap="nowrap" class="dim">Mathematical</td>
+                                                </tr>
+                                                <tr  funcsyntax="MIN(Number 1 ;  Number 2 ;  ...Number 20)" 
+                                                    funcname="MIN" id="func" class="">
+                                                    <td width="60%">MIN</td>
+                                                    <td nowrap="nowrap" class="dim">Statistical</td>
+                                                </tr>
+                                                <tr  funcsyntax="MAX(Number 1 ;  Number 2 ;  ...Number 20)" 
+                                                    funcname="MAX" id="func">
+                                                    <td width="60%">MAX</td>
+                                                    <td nowrap="nowrap" class="dim">Statistical</td>
+                                                </tr>
+                                                <tr  funcsyntax="ROUND(number ;  count)" 
+                                                funcname="ROUND" id="func">
+                                                    <td width="60%">ROUND</td><td nowrap="nowrap" class="dim">Mathematical</td>
+                                                </tr>
+                                                <tr  
+                                                funcsyntax="COUNT(value1 ;  value2 ;  ... value20)" 
+                                                funcname="COUNT" id="func">
+                                                    <td width="60%">COUNT</td>
+                                                    <td nowrap="nowrap" class="dim">Statistical</td></tr>
+                                                <tr  funcsyntax="IF(Test ;  Then_value ;  Otherwise_value)" 
+                                                funcname="IF" id="func" class="">
+                                                    <td width="60%">IF</td>
+                                                    <td nowrap="nowrap" class="dim">Logical</td></tr>
+                                                <tr  funcsyntax="COUNTIF(range ;  criteria)" funcname="COUNTIF" id="func" class="">
+                                                    <td width="60%">COUNTIF</td>
+                                                    <td nowrap="nowrap" class="dim">Mathematical</td>
+                                                </tr>
+                                                <tr  funcsyntax="SUMIF(range ;  criteria ;  sum_range)" funcname="SUMIF" id="func">
+                                                    <td width="60%">SUMIF</td>
+                                                    <td nowrap="nowrap" class="dim">Mathematical</td>
+                                                </tr>
+                                                <tr  funcsyntax="VLOOKUP(Search criterion ; array ; index ; Sort order)" funcname="VLOOKUP" id="func">
+                                                    <td width="60%">VLOOKUP</td><td nowrap="nowrap" class="dim">Spreadsheet</td></tr>
+                                                <tr  funcsyntax="TODAY()" funcname="TODAY" id="func">
+                                                    <td width="60%">TODAY</td><td nowrap="nowrap" class="dim">Date/Time</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="funcSyntax" colspan="2">SUM(number1 ;  number 2 ;  ... ;  number 20)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <table cellspacing="0" cellpadding="0" class="" style="width:100%">
+                    <tbody>
+                        <tr>
+                            <td style="height:20px">
+                                <div class="panels panelStatus" style="left: 0px; top: 0px; width: 100%; height: 100%;">
+                                    <table cellpadding="0" style="table-layout: fixed;" class="tblGeneric">
+                                        <tbody>
+                                            <tr>
+                                                <td class="secStatus " title="" id="cellStatus"></td>
+                                            </tr>
+                                       </tbody>
+                                     </table>
+                                </div>
+                          </td>
+                      </tr>
+                   </tbody>
+               </table>     
+            </td>
+        </tr>
+    </tbody>
+</table>
+<script>
+	function xshowState()
+	{
+		if(wave&&wave.getState())
+			$('thestate').set('text',wave.getState())
+		setTimeout(xshowState,2000);
+	}
+	//xshowState();
+</script>
+]]>
+</Content>
+</Module>
