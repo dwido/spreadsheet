@@ -1,7 +1,7 @@
 /* 
 
 Script: Spreadsheet.js
-	Spreadsheet -  Wave Spreadsheet Gadget that enables spreadsheet integration in your wave
+	Spreadsheet - Wave Spreadsheet Gadget that enables spreadsheet integration in your wave
 
 Copyright:
 	Copyright (c) 2009 David Buchbut, <http://spreadsheet.happinesbeats.com/>.
