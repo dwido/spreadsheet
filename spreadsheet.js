@@ -19,10 +19,11 @@ Contributors:
 
 var Spreadsheet = new Class({
     initialize: function(){
+        this.root = "http://wavespread.happinessbeats.com/gadget/";
         this.activeElement = {row:1,cell:1};
         this.gridSize = {rows:8,cells:26,frozenRows:0};
         this.markerColor = ['green','brown','orange','red','purple','lightblue','yellow','pink']
-        this.advancedFormula = 'SUM,AVERAGE,PRODUCT,MIN,MAX';
+        this.advancedFormula = 'SUM,AVERAGE,PRODUCT,MIN,MAX,ROUND';
         this.formulaHandler = new AdvancedFormula(this);
         this.resizeMargine = 10; // the margine to start show resize
         this.colorPalatte = [['000000','2C2C2C','838383','969696','c7C7C7','E1e1e1','FFFFFF'],
@@ -39,7 +40,11 @@ var Spreadsheet = new Class({
         this.sheet = 0;
         this.divHeaderContainer;
         this.actions = {};
-        this.currentRange = null; // selected range
+        this.formulaRange = this.currentRange = {
+            'from':{'r': null, 'c': null, 'minr': null, 'minc': null},
+            'to':{'r': null, 'c': null, 'minr': null, 'minc': null}
+        };
+
         this.grids = $('divContainer');
         this.matrix = this.grids.getElement('.divMatrix');
         this.divHeaderContainer = this.grids.getElement('div.divHeaderContainer');
@@ -61,10 +66,11 @@ var Spreadsheet = new Class({
                 'rowHeaderContainer': $('divHeaderRow')
         };   // pointer to elements in the header
         this.ghostFreezebar = this.grids.getElement('.ghostFreezeBar');
+        this.glass = this.grids.getElement('.divGlass'); 
         this.columnResizer = this.positionColumnResizer();
         this.selObj = {}   // pointer to selection objects
         this.selObj.selection = this.matrix.getElement('.divRange');
-        this.selObj.formulaSelector = this.matrix.getElement('.formulaMarker');
+        this.selObj.formulaSelection = this.matrix.getElement('.divFormulaRange');
         this.editBox = this.grids.getElement('.editBox');
         this.editBoxContainer = this.grids.getElement('.editBoxContainer');
         this.head.mouseOvercell = {row:null, cell:null};
@@ -72,15 +78,21 @@ var Spreadsheet = new Class({
         this.renderFrozenTable();
         this.renderMainTable();
         this.renderRowMarkers();
-        this.arrColWidth = this.setArrColumnWidth(); // use to calculate for resize column
+        this.arrColWidth;
+        this.arrRowHeight;
+        this.setArrColumnWidth(); // use to calculate for resize column
         this.cellFormulaEl = $('cellStatus');
-        
         this.addEvents();        
-
-        
         this.setGridSize();
+        this.glass.setPosition(this.getElement(1,1).getPosition(this.grids));
         this.createParticipantsMarkers();
         this.markActiveCell();
+        this.initialized = true;
+        this.mode; // EDIT DIFF_ON_OPEN PLAYBACK ....
+        this.currentState = null // a copy of the current state
+        this.actions = new Hash(); // holds the action list for each submit to be interpreted by state updated more efficiently
+        this.stateInitialized = false;
+        this.actionsIndex = 0;
     },
 
     getMarkedValue: function(){
@@ -117,7 +129,7 @@ var Spreadsheet = new Class({
         {
             this.activeElement = {"row":row,"cell":cell};
             if(showMarker) this.markActiveCell();
-            this.hideSelection();
+            this.hideRangeSelection();
         }
     },
     
@@ -229,8 +241,6 @@ var Spreadsheet = new Class({
         targetCell.setStyle('width',parseInt(this.getElement(row,cell).getSize().x));
         targetCell.setStyle('height',parseInt(this.getElement(row,cell).getSize().y));
         targetCell.setStyle('border-color',this.getColor(participantId));
-//            if(this.bLocalViewer(participantId)) // update state only for local participant change
-//                this.updateMarkerInState();
         
         if(!this.bLocalViewer(participantId) && bFade)
         {
@@ -257,6 +267,7 @@ var Spreadsheet = new Class({
         {
             var editable = {};
             editable[this.viewerId] = {"row":this.activeElement.row,"cell":this.activeElement.cell};
+            this.addAction('editables');
             we.state.set('editables',editable,true);
         }   
     },
@@ -311,7 +322,7 @@ var Spreadsheet = new Class({
             oSpreadsheet.editBoxContainer.setStyle('width',parseInt(oSpreadsheet.editBoxContainer.getStyle('width')) + oSpreadsheet.editBox.getScroll().y + 5);
     },
 
-    editBoxOnBlur: function(){
+    editBoxOnBlur: function(e){
         if(this.isEditableFieldActive())
         {
             this.hideEditBox();
@@ -320,14 +331,14 @@ var Spreadsheet = new Class({
                 parseInt(this.editBox.getAttribute('sourceFieldRow')),
                 parseInt(this.editBox.getAttribute('sourceFieldCell')),
                 this.editBox.value,null,null,null,false);
-            this.selObj.formulaSelector.setStyle('display','none'); // hide formula selector if it's visible
+            this.selObj.formulaSelection.setStyle('display','none'); // hide formula selector if it's visible
             we.submitChanges();
         }
-        this.markActiveCell();
+        this.markActiveCell(false);
     },
     
     deleteActiveElement: function(){
-        this.setValue(this.sheet,this.activeElement.row,this.activeElement.cell,null,this.activeElement.row,this.activeElement.cell,this.currentRange,true);
+        this.setValue(this.sheet,this.activeElement.row,this.activeElement.cell,'',this.activeElement.row,this.activeElement.cell,this.currentRange,true);
         this.setFormulaField('');
     },
     
@@ -343,12 +354,12 @@ var Spreadsheet = new Class({
         }
         else
         {
-            row = range.from.r;
-            cell = range.from.c;
-            toRow = range.to.r;
-            toCell = range.to.c;
+            row = range.from.minr;
+            cell = range.from.minc;
+            toRow = range.to.maxr;
+            toCell = range.to.maxc;
         }
-        if(value=='')value = null; // in order to remove completely from the state
+        //if(value=='')value = null; // in order to remove completely from the state
         var bFormula = (value!=null && value.substr(0,1) == '=');
         var formula;
         if(bFormula) // formula
@@ -364,7 +375,9 @@ var Spreadsheet = new Class({
         {
             for(var c=cell;c<=toCell;c++)
             {
-            	we.state.set('data.' + r + '.' + c,{"v":value,"f":formula},false);
+                var cursorPath = 'data.' + r + '.' + c;
+            	we.state.set(cursorPath,{"v":value,"f":formula},false);
+                this.addAction(cursorPath);
                 this.getElement(r,c).set('text',value);
                 this.onValueChange(r,c);
             }
@@ -373,6 +386,12 @@ var Spreadsheet = new Class({
             we.submitChanges();
     },
 
+    addAction: function(sKey){
+        var actionKey = (new Date().getTime()) + 'act' + this.actionsIndex++; // the actionIndex is used to make sure we always get a unique key
+        we.state.set('actions.' + actionKey,sKey,false); // add action to state
+        this.actions[actionKey] = sKey; // add action to action list
+    },
+    
     onValueChange: function(row,cell){
         this.updateDependencies(row,cell);
         this.alignRowHeaderHeight(row);
@@ -439,16 +458,17 @@ var Spreadsheet = new Class({
         }
         else
         {
-            row = range.from.r;
-            cell = range.from.c;
-            toRow = range.to.r;
-            toCell = range.to.c;
+            row = range.from.minr;
+            cell = range.from.minc;
+            toRow = range.to.maxr;
+            toCell = range.to.maxc;
         }
         for(var r=row;r<=toRow;r++)
         {
             for(var c=cell;c<=toCell;c++)
             {
                 we.state.set('data.' + r + '.' + c,{"s":styles},false);
+                this.addAction('data.' + r + '.' + c);
                 $H(styles).each(function(value, key) {
                     this.getElement(r,c).setStyle(key,value);    
                 }.bind(this));
@@ -500,8 +520,9 @@ var Spreadsheet = new Class({
             var theResize = td.makeResizable({
                 modifiers:{y:null}, // not to resize the height
                 onComplete: function(el){
-                    this.arrColWidth = this.setArrColumnWidth(); // use to calculate for resize column
+                    this.setArrColumnWidth(); // use to calculate for resize column
                     //submit the change to the state
+                    this.addAction('columns.' + el.cellIndex);
                     we.state.set('columns.' + el.cellIndex, {"w": el.getSize().x}, true);
                 }.bind(this),
                 onDrag: function(el){
@@ -664,6 +685,7 @@ var Spreadsheet = new Class({
 
     updateEditables: function(editables)
     {
+        //wave.log('enter update editables:' + (editables?JSON.stringify(editables):''))
         // remove all existing editing cells
         $$('div.divOtherUser').each(
             function(a){
@@ -672,6 +694,7 @@ var Spreadsheet = new Class({
         
         if(editables)
         {
+            //wave.log('remove all previous editable')
 		    //remove all previous editable
             $$('.divOtherCursorEditing').each(function(item){
                 item.removeClass('divOtherCursorEditing');
@@ -680,6 +703,8 @@ var Spreadsheet = new Class({
             editables.filterKeys($not($begins('$'))).each(function(value,participant){
                if(value != null && participant != '_cursorPath')
                {
+                //wave.log('participant:' + participant + ' ' + 'viewer:' + this.viewerId)
+
                 if(participant!=this.viewerId && value.cell!=null && value.row != null)
                 {
                 	 //get marker 
@@ -713,9 +738,9 @@ var Spreadsheet = new Class({
     			    this.setColumnWidth(key, value.w);
 		    }.bind(this));
 		    //make sure the active cell is refreshed and the row headers aligned
-            this.markActiveCell(false);
+            //this.markActiveCell(false);
             this.alignRowHeaderHeight(this.activeElement.row);
-            this.arrColWidth = this.setArrColumnWidth(); // update the column width
+            this.setArrColumnWidth(); // update the column width
  
 	}
 
@@ -735,40 +760,43 @@ var Spreadsheet = new Class({
         })
     },
 
-    updateActions: function(actions)
+    updateData: function(data)
     {
-    	if(actions)
+    	if(data)
     	{
 		// iterate through rows
-		    actions.filterKeys($not($begins('$'))).each(function(row,rowkey){
+		    data.filterKeys($not($begins('$'))).each(function(row,rowkey){
     			if(rowkey!="_cursorPath")
     			{
     				// iterate through cells
     				row.filterKeys($not($begins('$'))).each(function(cell,cellkey){     
     					if(cellkey!="_cursorPath")
-    					{
-    						cell.filterKeys($not($begins('$'))).each(function(value,typekey){     
-    								switch(typekey)
-    								{
-    									case 'v':
-    									      this.getElement(rowkey,cellkey).set('text',value);
-    									      //if there is a function to this cell attach it
-    									      if(cell.f!=null)
-    									        this.getElement(rowkey,cellkey).set('formula',cell.f);
-                                              
-    									break;	
-    									case 's':
-    									      this.getElement(rowkey,cellkey).set('styles',value);
-    									break;	
-    								}
-    						}.bind(this))
-    					}                 			
+    					    this.updateDataFromStateUpdate(rowkey,cellkey);
     				}.bind(this))
     		    }
 		    }.bind(this));
 		    
 		    this.alignAllRowHeader();
 	    }
+    },
+    
+    updateDataFromStateUpdate: function(rowkey, cellkey){
+        var cell = we.state.data[rowkey][cellkey]
+    	cell.filterKeys($not($begins('$'))).each(function(value,typekey){     
+    			switch(typekey)
+    			{
+    				case 'v':
+    				      this.getElement(rowkey,cellkey).set('text',value);
+    				      //if there is a function to this cell attach it
+    				      if(cell.f!=null)
+    				        this.getElement(rowkey,cellkey).set('formula',cell.f);
+                          
+    				break;	
+    				case 's':
+    				      this.getElement(rowkey,cellkey).set('styles',value);
+    				break;	
+    			}
+    	}.bind(this))
     },
 
     getMarker: function(participant)
@@ -923,14 +951,17 @@ var Spreadsheet = new Class({
             return el.get('text');
     },
     
-    selectRange: function(rowOffset, cellOffset, bShift){
+    selectRangeKeypressed: function(rowOffset,cellOffset, bShift, bFormula)
+    {
         var position,toRow,toCell;
-        var bInit = (this.selObj.selection.getStyle('display')=='none');
+        var selObject = (bFormula? this.selObj.formulaSelection: this.selObj.selection);
+        var range = (bFormula? this.formulaRange: this.currentRange);
+        var bInit = (selObject.getStyle('display')=='none');
         if(bInit)
-            this.selObj.selection.setStyle('display','');
+            selObject.setStyle('display','');
         
-        toRow = this.currentRange.to.r + rowOffset;
-        toCell = this.currentRange.to.c + cellOffset;
+        toRow = range.to.r + rowOffset;
+        toCell = range.to.c + cellOffset;
         
         if(!bShift)
         {
@@ -939,20 +970,21 @@ var Spreadsheet = new Class({
         }
         else
         {
-            fromRow = this.currentRange.from.r;
-            fromCell = this.currentRange.from.c;
+            fromRow = range.from.r;
+            fromCell = range.from.c;
         }
-
-        //this.currentRange = {'from':{'r':Math.min(toRow,fromRow), 'c': Math.min(toCell,fromCell)},'to':{'r': Math.max(toRow,fromRow), 'c':Math.max(toCell,fromCell)}};
-        this.setRange(fromRow, fromCell, toRow, toCell);
-        this.selObj.selection.setPosition(this.getElement(this.currentRange.from.minr, this.currentRange.from.minc).getPosition(this.matrix)); // position selection div
-
-        position = this.getElement(this.currentRange.to.maxr + 1, this.currentRange.to.maxc + 1).getPosition(this.matrix); // get the next cell,row location which marks the end of the selection
+        this.selectRange(fromRow, fromCell, toRow, toCell, bFormula);
+    },
+    
+    selectRange: function(fromRow, fromCell, toRow, toCell, bFormula){
+        //this.selObj.selection.setStyle('display','');
+        var selObject = (bFormula? this.selObj.formulaSelection: this.selObj.selection);
+        var range = this.setRange(fromRow, fromCell, toRow, toCell, bFormula);
+        selObject.setPosition(this.getElement(range.from.minr, range.from.minc).getPosition(this.matrix)); // position selection div
+        position = this.getElement(range.to.maxr + 1, range.to.maxc + 1).getPosition(this.matrix); // get the next cell,row location which marks the end of the selection
         //it's already showing and positioned just view it
-        this.selObj.selection.setStyle('width', Math.abs(position.x - parseInt(this.selObj.selection.style.left)));
-        this.selObj.selection.setStyle('height', Math.abs(position.y - parseInt(this.selObj.selection.style.top)));
-//        this.selObj.selection.set('toRow', toRow);
-//        this.selObj.selection.set('toCell', toCell);
+        selObject.setStyle('width', Math.abs(position.x - parseInt(selObject.style.left)));
+        selObject.setStyle('height', Math.abs(position.y - parseInt(selObject.style.top)));
     },
     
 /*    initSelection: function(){
@@ -967,7 +999,7 @@ var Spreadsheet = new Class({
         this.selObj.selection.set('toCell', this.activeElement.cell);
     },
   */  
-    hideSelection: function(){
+    hideRangeSelection: function(){
         if(this.selObj.selection.style.display!='none')
         {
             //this.currentRange = null;
@@ -1007,29 +1039,35 @@ var Spreadsheet = new Class({
         return (row <= this.gridSize.frozenRows);
     },
     
-    setRange: function(fromRow, fromCell, toRow, toCell){
-        this.currentRange = {
+    setRange: function(fromRow, fromCell, toRow, toCell, bFormula){
+        var range = {
             'from':{'r': fromRow, 'c': fromCell, 'minr': Math.min(toRow, fromRow), 'minc': Math.min(toCell, fromCell)},
             'to':{'r': toRow, 'c': toCell, 'maxr': Math.max(toRow, fromRow), 'maxc': Math.max(toCell, fromCell)}
         };
-        
-    	this.setHighlights(fromRow, fromCell, toRow, toCell);
-    	this.updateCellLocation();
+
+        if(bFormula)
+            this.formulaRange = range;
+        else
+        {
+        	this.setHighlights(fromRow, fromCell, toRow, toCell);
+        	this.updateCellLocation(range);
+            this.currentRange = range;
+        }
+    	return range;
     },
 
-    getRangeCaption: function(){
-        if(this.bMultiRange())
-            return this.getRangeAlphaNumericIndex();
+    getRangeCaption: function(range){
+        if(this.bMultiRange(range))
+            return this.getRangeAlphaNumericIndex(range);
         else
-            return this.getCellAlphaNumericIndex(this.currentRange.from.r,this.currentRange.from.c);
+            return this.getCellAlphaNumericIndex(range.from.r,range.from.c);
     },
         
-    bMultiRange : function(){
-        return ((this.currentRange.from.r != this.currentRange.to.r) || (this.currentRange.from.c != this.currentRange.to.c));
+    bMultiRange : function(range){
+        return ((range.from.r != range.to.r) || (range.from.c != range.to.c));
     },
 
     alignRowHeaderHeight:    function(row){
-        //if(this.getContainerGrid(row).rows[row].getSize().y>parseInt(this.getContainerRowHead(row).rows[row].getFirst().getStyle('height')))debugger;
         this.getContainerRowHead(row).rows[row].getFirst().setStyle('height',this.getActiveRow(row).getSize().y);
         this.adjustGadgetHeight();
     },
@@ -1084,8 +1122,8 @@ var Spreadsheet = new Class({
     },
 
     // returns E3:F8
-    getRangeAlphaNumericIndex: function(){
-        return this.getCellAlphaNumericIndex(this.currentRange.from.minr,this.currentRange.from.minc) + ":" + this.getCellAlphaNumericIndex(this.currentRange.to.maxr,this.currentRange.to.maxc);
+    getRangeAlphaNumericIndex: function(range){
+        return this.getCellAlphaNumericIndex(range.from.minr,range.from.minc) + ":" + this.getCellAlphaNumericIndex(range.to.maxr,range.to.maxc);
     },
     
     // E7:F8 -> {'from':{'r': 5, 'c': 7},'to':{'r': 6, 'c': 8}}; 
@@ -1098,23 +1136,12 @@ var Spreadsheet = new Class({
     
     // to update the Location of the active cell in the left cell on the bar on top of the grid
     updateCellLocation: function(range){ 
-        /*if(this.currentRange.from.c==this.currentRange.to.c&&this.currentRange.from.r==this.currentRange.to.r)
-            this.cellLocationTd.set('text',this.getCellAlphaNumericIndex(this.currentRange.from.r,this.currentRange.from.c))*/
+        if(range.from.c==range.to.c&&range.from.r==range.to.r)
+            this.cellLocationTd.set('text',this.getCellAlphaNumericIndex(range.from.r,range.from.c));
     },
     
     setGridSize: function(){
         var windowSize = window.getSize();
-        /*debugger;
-        var yHeader = parseInt($('divHeaderContainer').getStyle('height'));
-        var totalHeight = windowSize.y-x;
-        var divTopheight = totalHeight-16;
-        var mainHeight = totalHeight - yHeader - 3;
-        //$('divHeaderContainer').setStyle('width',windowSize.x-57);
-        this.grids.setStyle('height',totalHeight);
-        this.matrix.getElement('.divTop').setStyle('height',divTopheight);
-        this.matrix.getElement('.divMainArea').setStyle('height',mainHeight);
-        this.rowHead.setStyle('height',mainHeight);*/
-        /* width */
         this.main.gridContainer.setStyle('width',windowSize.x - 40);
         this.head.gridContainer.setStyle('width',windowSize.x - 41);
     },
@@ -1169,6 +1196,17 @@ var Spreadsheet = new Class({
 		}.bind(this))
     },
     
+    showImportFileDialog: function(){
+	    new MochaUI.Window({
+			id: 'mywindow',
+			title: 'My Window',
+			loadMethod: 'xhr',
+			contentURL: this.root + 'lipsum',
+			width: 340,
+			height: 150
+		});
+    },
+    
     setCellFormula: function(text){
         //this.cellFormulaEl.value = (text?text:$pick(this.getActiveElement().get('formula'),this.getActiveElement().get('text')));
         this.cellFormulaEl.set('text',(text?text:$pick(this.getActiveElement().get('formula'),this.getActiveElement().get('text'))));
@@ -1209,13 +1247,18 @@ var Spreadsheet = new Class({
     },
     
     setArrColumnWidth: function(){
-        var arrWidth = [];
+        this.arrColWidth = [];
         for(var col=0; col < this.head.grid.rows[0].cells.length; col++)
-            arrWidth[col] = this.head.grid.rows[0].cells[col].getSize().x;
-        return arrWidth;
+            this.arrColWidth[col] = this.head.grid.rows[0].cells[col].getSize().x;
     },
     
-    getCursorResizeInfo: function(x)
+    setArrRowHeight: function(){
+        this.arrRowHeight = [];
+        for(var r = 0; r < this.main.grid.rows.length; r++)
+            this.arrRowHeight[r] = this.main.grid.rows[r].getSize().y;
+    },
+    
+    getCursorColumn: function(x)
     {
         var accumulatedWidth = 0;
         var columnIndex = 0;
@@ -1237,6 +1280,28 @@ var Spreadsheet = new Class({
         return ret;
     },
     
+    getCursorRow: function(y)
+    {
+        var accumulatedHeight = 0;
+        var rowIndex = 0;
+        var bLoop = true;
+        var ret;
+        while(rowIndex < this.arrRowHeight.length && bLoop)
+        {
+            var nextAcumulation = accumulatedHeight + this.arrRowHeight[rowIndex];
+            if(y < nextAcumulation)
+            {
+                ret = {'r':rowIndex,'y' : accumulatedHeight, 'offsettop': y - accumulatedHeight,'offsetbottom': nextAcumulation - y, 'height': this.arrRowHeight[rowIndex]}
+                bLoop = false;
+            }
+            else
+                accumulatedHeight = nextAcumulation 
+            
+            rowIndex++;
+        }
+        return ret;
+    },
+    
     positionColumnResizer: function(){
         var resizer = this.grids.getElement('.columnResizer');
         resizer.setPosition(this.head.grid.getPosition(this.grids));
@@ -1244,55 +1309,49 @@ var Spreadsheet = new Class({
     },
     
     addEvents: function(){
-        this.head.grid.addEvent('click',function(e){
+        /*this.head.grid.addEvent('click',function(e){
             this.setActiveElement(e.target.parentNode.rowIndex,e.target.cellIndex,true);
         }.bind(this));
 
         this.main.grid.addEvent('click',function(e){
             this.setActiveElement(e.target.parentNode.rowIndex,e.target.cellIndex,true);
-        }.bind(this));
+        }.bind(this));*/
 
-        this.editBox.addEvent('blur',function(){
-            this.editBoxOnBlur();
+        this.editBox.addEvent('blur',function(e){
+            this.editBoxOnBlur(e);
         }.bind(this));
 
         this.editBox.addEvent('keydown',function(e){
-                if(this.editBox.value.substr(0,1)=="=") // formula
+                if(this.editBox.value.substr(0,1)=='=') // formula
                 {
                     if(e.key=='right' || e.key=='left' || e.key=='up' || e.key=='down')
                     {
-                        /*if(this.selObj.formulaSelector.getStyle('display')=='none')
-                        {
-                            this.selObj.formulaSelector.set('cell',this.activeElement.cell);
-                            this.selObj.formulaSelector.set('row',this.activeElement.row);
-                            this.selObj.formulaSelector.setStyle('display','');
-                            this.editBox.origValue = this.editBox.value; // remember the original value
-                        }
-                        this.positionElement(this.selObj.formulaSelector,e);*/
                         if(this.editBox.get('rangeSelection')!='active')
                         {
                             this.editBox.origValue = this.editBox.value;
                             this.editBox.set('rangeSelection','active');
+                            this.formulaRange.from.r = this.formulaRange.to.r = this.activeElement.row;
+                            this.formulaRange.from.c = this.formulaRange.to.c = this.activeElement.cell;
                         }
                         
                         switch(e.key)
                         {
                             case 'right':
-                                this.selectRange(0, 1, e.shift);
+                                this.selectRangeKeypressed(0, 1, e.shift, true);
                                 break;
                             case 'left':
-                                this.selectRange(0, -1, e.shift);
+                                this.selectRangeKeypressed(0, -1, e.shift, true);
                                 break;
                             case 'up':
-                                this.selectRange(-1, 0, e.shift);
+                                this.selectRangeKeypressed(-1, 0, e.shift, true);
                                 break;
                             case 'down':
-                                this.selectRange(1, 0, e.shift);
+                                this.selectRangeKeypressed(1, 0, e.shift, true);
                                 break;
                         }
                         
                         //this.editBox.value = this.editBox.origValue + (String.fromCharCode(64+parseInt(this.selObj.formulaSelector.get('cell'))).toUpperCase()) + this.selObj.formulaSelector.get('row');
-                        this.editBox.value = this.editBox.origValue + this.getRangeCaption();
+                        this.editBox.value = this.editBox.origValue + this.getRangeCaption(this.formulaRange);
                         return false;
                     }
                     else
@@ -1300,14 +1359,15 @@ var Spreadsheet = new Class({
                         if(e.code!=16) // for shift do nothing
                         {
                             this.editBox.set('rangeSelection',null);
-                            this.selObj.formulaSelector.setStyle('display','none');
+                            this.selObj.formulaSelection.setStyle('display','none');
                         }
                     }
                     this.adjustEditBox();
                 }
                 if (e.key=='enter')
                 {
-                    this.editBox.fireEvent('blur');
+                    
+                    //this.editBox.fireEvent('blur');
                     this.focusGrid();
                     //this.markActiveCell();
                 }
@@ -1321,6 +1381,7 @@ var Spreadsheet = new Class({
                 if(e.key=='right'||e.key=='left'||e.key=='up'||e.key=='down')
                     if (this.editBox.get('editable')) // stop propagation so the arrows will navigate within the cell
                         e.stopPropagation();
+                    
         }.bind(this));
 
         
@@ -1368,6 +1429,9 @@ var Spreadsheet = new Class({
         
         // keys events
         document.addEvent('keydown', function(e) {
+            if(!this.editable())
+                return true;
+
             var stopPropagation = false;
             if(e.shift && (e.key=='right' || e.key=='left' || e.key=='up' || e.key=='down'))
             {
@@ -1378,16 +1442,16 @@ var Spreadsheet = new Class({
                 switch(e.key)
                 {
                     case 'right':
-                        this.selectRange(0, 1, e.shift);
+                        this.selectRangeKeypressed(0, 1, e.shift);
                         break;
                     case 'left':
-                        this.selectRange(0, -1, e.shift);
+                        this.selectRangeKeypressed(0, -1, e.shift);
                         break;
                     case 'up':
-                        this.selectRange(-1, 0, e.shift);
+                        this.selectRangeKeypressed(-1, 0, e.shift);
                         break;
                     case 'down':
-                        this.selectRange(1, 0, e.shift);
+                        this.selectRangeKeypressed(1, 0, e.shift);
                         break;
                 }
                 return false;
@@ -1403,9 +1467,8 @@ var Spreadsheet = new Class({
                 else
                     this.activeElement.cell++;
 
+                this.setActiveCell();
                 this.editBox.fireEvent('blur');
-                this.markActiveCell();
-                this.hideSelection(); //hide selection div if visible
                 stopPropagation = true;
             }
             else  if (e.key=='left' || (e.key=='tab' && e.shift))
@@ -1413,9 +1476,7 @@ var Spreadsheet = new Class({
                 //check if this the last item on the row
                 if(!this.isFirstCell())
                     this.activeElement.cell--;
-                    this.editBox.fireEvent('blur');
-                //this.markActiveCell();
-                this.hideSelection(); //hide selection div if visible
+	        this.setActiveCell();
                 stopPropagation = true;
             }
             else  if (e.key=='up')
@@ -1424,12 +1485,9 @@ var Spreadsheet = new Class({
                 if(this.isFirstRow())
                     return false;
                 else
-                {
                     this.activeElement.row--;
-                    //this.markActiveCell();
-                    this.editBox.fireEvent('blur');
-                }
-                this.hideSelection(); //hide selection div if visible
+
+		        this.setActiveCell();
                 stopPropagation = true;
             }
             else  if (e.code==36) // home
@@ -1437,21 +1495,19 @@ var Spreadsheet = new Class({
                 this.activeElement.cell = 1;
                 this.hideEditBox(); // hide the edit box and clear it
                 this.markActiveCell();
-                this.hideSelection(); //hide selection div if visible
+                this.hideRangeSelection(); //hide selection div if visible
                 stopPropagation = true;
             }
             else  if (e.key=='down')
             {
                 //check if this the last item on the row
                 this.activeElement.row++;
-                this.editBox.fireEvent('blur');
-                this.hideSelection(); //hide selection div if visible
+                this.setActiveCell();
                 stopPropagation = true;
             }
             else  if (e.key=='delete')
             {
                 this.deleteActiveElement();
-                this.markActiveCell();
                 stopPropagation = true;
             }
             else  if (e.key=='f2'||e.key=='enter')
@@ -1459,7 +1515,6 @@ var Spreadsheet = new Class({
                 if(e.target.tagName.toLowerCase()!='textarea')
                 {
                     this.showEditableField(true);
-                    //this.markActiveCell();
                     stopPropagation = true;
                 }
                 else 
@@ -1523,7 +1578,7 @@ var Spreadsheet = new Class({
         // Column resize events
         this.head.grid.rows[0].addEvent('mousemove',function(e){
             var headerOffsetLeft = this.head.grid.getPosition(this.grids).x;
-            var resizeInfo = this.getCursorResizeInfo(e.client.x - this.head.grid.getPosition(this.grids).x);
+            var resizeInfo = this.getCursorColumn(e.client.x - this.head.grid.getPosition(this.grids).x);
             
             if(resizeInfo.offsetright < this.resizeMargine)
                 this.head.grid.rows[0].setStyle('cursor','col-resize');
@@ -1558,6 +1613,70 @@ var Spreadsheet = new Class({
             }
         });
 
+        this.glass.addEvent('mousedown',function(e){
+            if(!this.editable())
+                return false;
+            //mark current cell
+            var pos = this.getElement(1,1).getPosition();
+            var xPos = e.client.x - pos.x;
+            var yPos = e.client.y - pos.y;
+            this.setArrRowHeight();
+            var rowInfo = this.getCursorRow(yPos);
+            var columnInfo = this.getCursorColumn(xPos);
+            var bFormulaActivated = this.bFormulaActivated();
+            var range = (bFormulaActivated? this.formulaRange: this.currentRange);
+            var selObj = (bFormulaActivated? this.selObj.formulaSelection: this.selObj.selection); 
+            if(!bFormulaActivated) // only activate the field if the editable field is not active
+                //mark active cell as well as update selection info with the from cell
+                this.setActiveCell(rowInfo.r, columnInfo.c);
+            else
+                if(this.editBox.get('rangeSelection')!='active') // since value has to go back to edit box
+                {
+                    this.editBox.origValue = this.editBox.value;
+                    this.editBox.set('rangeSelection','active');
+                }
+
+
+            selObj.setStyles({'display':'','width':'1px','height':'1px'});
+            range.from.r = range.to.r = rowInfo.r;
+            range.from.c = range.to.c = columnInfo.c;
+            this.glass.mousedown = true;
+            return false;
+        }.bind(this));
+
+        this.glass.addEvent('mousemove',function(e){
+            //mark current cell
+            if(this.glass.mousedown)
+            {
+                var pos = this.getElement(1,1).getPosition();
+                var xPos = e.client.x - pos.x;
+                var yPos = e.client.y - pos.y;
+                var rowInfo = this.getCursorRow(yPos);
+                var columnInfo = this.getCursorColumn(xPos);
+                var bFormulaActivated = this.bFormulaActivated();
+                var range = (bFormulaActivated? this.formulaRange: this.currentRange);
+                range.to.r = rowInfo.r;
+                range.to.c = columnInfo.c;
+                this.selectRange(range.from.r,range.from.c,range.to.r,range.to.c,bFormulaActivated);
+                if(bFormulaActivated)
+                    this.editBox.value = this.editBox.origValue + this.getRangeCaption(range);
+            }
+        }.bind(this));
+
+        this.glass.addEvent('mouseup',function(e){
+            this.glass.mousedown = false;
+        }.bind(this));
+    },
+
+    removeEvents: function(){
+        
+    },
+
+    setActiveCell: function(row, cell){
+            this.activeElement.cell = $pick(cell || this.activeElement.cell);
+            this.activeElement.row = $pick(row || this.activeElement.row);
+	        this.hideRangeSelection(); // hide range selection 
+            this.markActiveCell();
     },
 
     showGhostFreezebar: function(){
@@ -1576,7 +1695,29 @@ var Spreadsheet = new Class({
         //remove the user from the state
         this.removeEditableInState(participant);
         we.submitChanges();
+    },
+
+    editable: function(){
+      return (wave != null && this.mode==wave.Mode.EDIT)  
+    },
+        
+/*    updateDelta: function(state){
+        this.currentState.data.each(function(row,rKey){ //iterate rows
+            if(!isNaN(rKey))
+                row.each(function(cell,cKey){
+                    if(!isNaN(cKey))
+                    {
+                        if(!(state.data[rKey] && state.data[rKey][cKey] && state.data[rKey][cKey].v)) //check if this still exist in the new state
+                            this.setValue(this.sheet,rKey,cKey,null,rKey,cKey,null,false);
+                    }
+                }.bind(this))    //iterate cells
+        }.bind(this));
+    },*/
+    
+    bFormulaActivated: function(){
+        return this.isEditableFieldActive() && this.editBox.value.substr(0,1)=='=';
     }
+    
     
 /*    // "A7:B8" --> [{r:7,c:1,name:'A7'},{r:8,c:1,name:'A8'},{r:7,c:2,name:'B7'},{r:8,c:2,name:'B8'}]
     parseRange: function(range){
@@ -1616,27 +1757,72 @@ var Spreadsheet = new Class({
     }
     
     function stateUpdated(state) {
-          //alert(wave.getViewer());
-        if(oSpreadsheet && oSpreadsheet.viewerId==null && wave.getViewer()!=null) //set the div for the active viewer
-        {  
-            oSpreadsheet.viewerId = wave.getViewer().getId().replace(/\./g, "_");
-            oSpreadsheet.head.currentCell.setAttribute('forParticipant',oSpreadsheet.viewerId);
-            oSpreadsheet.main.currentCell.setAttribute('forParticipant',oSpreadsheet.viewerId);
-        }
-        
-        if(oSpreadsheet && oSpreadsheet.grids!=null) //the page was loaded
+        if(oSpreadsheet.initialized)
         {
-           oSpreadsheet.updateMarkers(state.markers);
-           oSpreadsheet.updateEditables(state.editables);
-           oSpreadsheet.updateActions(state.data);
-           oSpreadsheet.updateColumns(state.columns);
+            if(oSpreadsheet.viewerId==null && wave.getViewer()!=null) //set the div for the active viewer
+            {  
+                oSpreadsheet.viewerId = wave.getViewer().getId().replace(/\./g, "_");
+                oSpreadsheet.head.currentCell.setAttribute('forParticipant',oSpreadsheet.viewerId);
+                oSpreadsheet.main.currentCell.setAttribute('forParticipant',oSpreadsheet.viewerId);
+            }
+
+            if(oSpreadsheet.stateInitialized)
+            {
+                //wave.log('stateUpdate:' + JSON.stringify(state))
+    		    if(state.actions)
+    		    {
+        		    state.actions.filterKeys($not($begins('$'))).each(function(action,key){
+            			if(key!="_cursorPath")
+            			{
+            			    if(!oSpreadsheet.actions.has(key))
+            			    {
+                    		    var tokens = action.split('.');
+                			    switch(tokens[0])
+                			    {
+                			        case 'data':
+                			            oSpreadsheet.updateDataFromStateUpdate(tokens[1],tokens[2])
+                			            break;    
+                			        case 'columns':
+                                        oSpreadsheet.updateColumns(state.columns);
+                			            break;    
+                			    }
+                			    oSpreadsheet.actions[key] = action;
+            			    }
+            		    }
+            		})
+            		
+            		if(state.editables)
+                        oSpreadsheet.updateEditables(state.editables);
+                }            
+            }
+            else
+            {            
+                oSpreadsheet.updateMarkers(state.markers);
+                oSpreadsheet.updateEditables(state.editables);
+                oSpreadsheet.updateData(state.data);
+                oSpreadsheet.updateColumns(state.columns);
+                oSpreadsheet.stateInitialized = true; 
+                //wave.log('stateInitialized')
+                state.unset('actions'); //reset the actions with next state submission
+            }
         }
     }
     
     function participantStateUpdated(state) {
         oSpreadsheet.participants = state;
     }
+
+    function modeCallback(mode) {
+        if(oSpreadsheet && oSpreadsheet.initialized)
+        {
+            oSpreadsheet.mode=mode;
+            if(mode==wave.Mode.EDIT)
+                $('spnEditModeMsg').setStyle('display','none');
+            else
+                $('spnEditModeMsg').setStyle('display','');
+        }
+    }
     //gadgets.util.registerOnLoadHandler(init);
     var oSpreadsheet;
-    
-    window.addEvent('domready', function(){oSpreadsheet = new Spreadsheet()});
+    wave.setModeCallback(modeCallback);
+    window.addEvent('domready', function(){oSpreadsheet = new Spreadsheet();});

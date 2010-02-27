@@ -260,8 +260,8 @@ body, body td, .tblHeaderContent, .tblGeneric {
     z-index:6;
 }
 
-.formulaMarker {
-    background-color:#008000;
+.divFormulaRange {
+    background-color:#CC6633;
     border-style:none;
     border-width:0;
     font-size:1pt;
@@ -291,6 +291,7 @@ body, body td, .tblHeaderContent, .tblGeneric {
     z-index:5;
 }
 
+/* toolbar */
 .markdown {
         background-color:#F6F6F6;
         border:1px solid #D7D7D7;
@@ -503,4 +504,24 @@ body, body td, .tblHeaderContent, .tblGeneric {
     padding-left:5px;
 }
 
+.divGlass {
+    background-color:#000000;
+    border-style:none;
+    opacity:0;
+    overflow:hidden;
+    position:absolute;
+    z-index:7;
+}
+
+#spnEditModeMsg {
+    z-index:999;
+    background-color:white;
+    opacity:0.8;
+    border:1px solid #808080;
+    position:absolute;
+    top:50px;
+    left:250px;
+    z-index:200;
+    padding:5px;
+}
 /* End of function box */

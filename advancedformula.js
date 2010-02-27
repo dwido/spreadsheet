@@ -20,6 +20,8 @@ var AdvancedFormula = new Class({
                     return this.min(arrValues);
             case 'MAX':
                     return this.max(arrValues);
+            case 'ROUND':
+                    return Math.round(arrValues[0]);
         }
     },
 
@@ -51,25 +53,25 @@ var AdvancedFormula = new Class({
         //var arrCells = arguments.split(',');
         var sum=0;
         arrValues.each(function(item){
-            sum += parseInt(item);
+            sum += parseFloat(item);
         })
-        return sum;
+        return sum.toFixed(2);
     },
     
     average: function(arrValues){
         //var arrCells = arguments.split(',');
         var sum=0;
         arrValues.each(function(item){
-            sum += parseInt(item);
+            sum += parseFloat(item);
         })
-        return sum/arrValues.length;
+        return (sum/arrValues.length).toFixed(2);
     },
     
     product: function(arrValues){
         //var arrCells = arguments.split(',');
         var retval=1;
         arrValues.each(function(item){
-            retval *= parseInt(item);
+            retval *= parseFloat(item);
         })
         return retval;
     },
@@ -77,7 +79,7 @@ var AdvancedFormula = new Class({
     max: function(arrValues){
         var retval = arrValues[0];
         arrValues.each(function(item){
-            if (retval < parseInt(item)) retval = parseInt(item);
+            if (retval < parseFloat(item)) retval = parseFloat(item);
         })
         return retval;
     },
@@ -85,7 +87,7 @@ var AdvancedFormula = new Class({
     min: function(arrValues){
         var retval = arrValues[0];
         arrValues.each(function(item){
-            if (retval > parseInt(item)) retval = parseInt(item);
+            if (retval > parseFloat(item)) retval = parseFloat(item);
         })
         return retval;
     },

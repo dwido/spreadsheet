@@ -7,18 +7,19 @@
 <Content type="html">
 <![CDATA[
 
-	<link href="http://spreadsheet.happinessbeats.com/gadget/spreadsheet.css" rel="stylesheet" type="text/css" media="screen" />
-	<link href="http://spreadsheet.happinessbeats.com/gadget/mochaui/ui.css" rel="stylesheet" type="text/css" media="screen" />
-	<script src="http://spreadsheet.happinessbeats.com/gadget/mootools-1.2.4-core.js" type="text/javascript"></script>
-	<script src="http://spreadsheet.happinessbeats.com/gadget/mootools-1.2.4.2-more.js" type="text/javascript"></script>
-	<script type="text/javascript" src="http://spreadsheet.happinessbeats.com/gadget/thewe.js"></script>
-	<script type="text/javascript" src="http://spreadsheet.happinessbeats.com/gadget/advancedformula.js"></script>
-	<script type="text/javascript" src="http://spreadsheet.happinessbeats.com/gadget/spreadsheet.js"></script>
-	<script type="text/javascript" src="http://spreadsheet.happinessbeats.com/gadget/mochaui/mocha.js"></script>
+	<link href="http://wavespread.happinessbeats.com/gadget/spreadsheet.css" rel="stylesheet" type="text/css" media="screen" />
+	<link href="http://wavespread.happinessbeats.com/gadget/mochaui/ui.css" rel="stylesheet" type="text/css" media="screen" />
+	<script src="http://wavespread.happinessbeats.com/gadget/mootools-1.2.4-core.js" type="text/javascript"></script>
+	<script src="http://wavespread.happinessbeats.com/gadget/mootools-1.2.4.2-more.js" type="text/javascript"></script>
+	<script type="text/javascript" src="http://wavespread.happinessbeats.com/gadget/thewe.js"></script>
+	<script type="text/javascript" src="http://wavespread.happinessbeats.com/gadget/advancedformula.js"></script>
+	<script type="text/javascript" src="http://wavespread.happinessbeats.com/gadget/spreadsheet.js"></script>
+	<script type="text/javascript" src="http://wavespread.happinessbeats.com/gadget/mochaui/mocha.js"></script>
 
 <div style="z-Index:200;position:absolute;top:100px;left:30px;" id="thestate">
 </div>
-<!-- button onclick="xshowState()" style="z-Index:200;position:absolute;top:100px;left:0px;">View State</button-->
+<!--button onclick="xshowState()" style="z-Index:200;position:absolute;top:30px;left:0px;">View State</button>
+<button onclick="$('thestate').set('text','');" style="z-Index:200;position:absolute;top:50px;left:0px;">clear</button-->
 <div>
 	<ul class="markdown">
 		<li>
@@ -36,6 +37,9 @@
 		<li>
 			<a class="markdown-function" title="Insert Function" id="btnFunction" onclick="oSpreadsheet.showFormulaDialog()"></a>
 		</li>
+		<!--li>
+			<a class="markdown-function" title="Import" id="btnFunction" onclick="oSpreadsheet.showImportFileDialog()"></a>
+		</li-->
 		<li>
 			<input type="checkbox" checked="true" id="heightAutoAdjust"> <span style="font-size:8pt;">Adjust gadget height</span>
 		</li>
@@ -48,7 +52,7 @@
                 <table cellspacing="0" cellpadding="0" id="headerMarker">
                     <tbody>
                         <tr>
-                            <td valign="middle" align="center" class="cellLocationTd" id="cellLocationTd">
+                            <td valign="middle" align="center">
                                 
                             </td>      
                             <td style="valign:middle;width:20px;" align="center">=</td>
@@ -69,21 +73,17 @@
                     	tabindex="2" sourceFieldRow="1" sourceFieldCell="1"
                     	aria-haspopup="true" role="combobox" aria-autocomplete="list" aria-activedescendant=""></textarea>
                 	</div>
-                <input tabIndex="1" style="width:0px;height:0px;left:-100px;position:absolute;z-index:1" id="xxFocus"/>
+                 <input tabIndex="1" style="width:0px;height:0px;left:100px;position:absolute;z-index:1" id="xxFocus"/>
             	<div class="columnResizer" style="display: none; left: 1px; top: 1px;"></div>
                     <div class="ghostFreezeBar" style="left: 0px; top: 0px;"></div>	
                 	<div class="divMatrix" style="width: 100%; height: 100%;">
+                        <div class="divGlass" style="width: 1264px; height: 161px; cursor: default;"></div>
                         <div class="divMainArea" style="left: 35px; top: 51px; width: 1242px;overflow:hidden;" id="g0">
-                            <div class="divTop" style="left: 0px; top: 0px; z-index: 7;"></div>
                             <table id="tblContent" class="tblHeaderContent" cellspacing="0" cellpadding="0" border="0" style="">
-                                <tbody>
-                                    <!--tr class="rShim"><td style="width: 0pt;" class="rShim"></td><td style="width: 120px;" class="rShim"></td><td style="width: 120px;" class="rShim"></td><td style="width: 120px;" class="rShim"></td><td style="width: 120px;" class="rShim"></td><td style="width: 120px;" class="rShim"></td><td style="width: 120px;" class="rShim"></td><td style="width: 120px;" class="rShim"></td><td style="width: 120px;" class="rShim"></td><td style="width: 120px;" class="rShim"></td><td style="width: 120px;" class="rShim"></td><td style="width: 120px;" class="rShim"></td><td style="width: 120px;" class="rShim"></td><td style="width: 120px;" class="rShim"></td><td style="width: 120px;" class="rShim"></td><td style="width: 120px;" class="rShim"></td><td style="width: 120px;" class="rShim"></td><td style="width: 120px;" class="rShim"></td><td style="width: 120px;" class="rShim"></td><td style="width: 120px;" class="rShim"></td><td style="width: 120px;" class="rShim"></td></tr>
-                                    <tr style="display: none;"><td class="hd"><p style="height: 16px;">.</p></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr-->
-                                </tbody>
+                                <tbody></tbody>
                             </table>
                         	<div class="divCurrentCell" forParticipant="self" style="width: 122px; height: 19px; top: 37px; left: -1px;z-index:100; display:none">
                         	</div>
-                			<!--div class="divOtherUser" style="border-color: rgb(16, 150, 24); border-width: 2px; top: 55px; left: 362px; width: 122px; height: 19px;display:none;"></div-->
                         </div>
                 	    
                 		<div class="divFrozenPanel divHeaderRow divHeaderContainer" style="left: -1px; top: 0pt; width: 36px;">
@@ -113,13 +113,11 @@
                 			    </tbody>
                 			</table>
                         	<div class="divCurrentCell" forParticipant="self" style="width: 122px; height: 19px; top: 37px; left: -1px;z-index:100;"></div>
-                            <!--div class="divOtherUser" style="border-color: rgb(16, 150, 24); border-width: 2px; top: 55px; left: 362px; width: 122px; height: 19px;display:none;"></div-->
                 
                 		</div>
                         <div class="divSelObjs" style="left: 0px; top: 0px; width: 0px; height: 0px;">
-                			<div class="divRange" style="width: 363px; height: 67px; top: 146px; left: 484px; display:none;"></div>
                 			<div style="width: 2420px; height: 18px; top: 20px; left: 0pt; display: none;" class="divRange"></div>
-                			<div style="width: 0pt; height: 0pt; top: -3px; left: -3px; display: none;" class="formulaMarker"></div>
+                			<div style="width: 0pt; height: 0pt; top: -3px; left: -3px; display: none;" class="divFormulaRange"></div>
                         </div>
                 	</div>
                     
@@ -180,7 +178,7 @@
                                                 funcname="ROUND" id="func">
                                                     <td width="60%">ROUND</td><td nowrap="nowrap" class="dim">Mathematical</td>
                                                 </tr>
-                                                <tr  
+<!--                                                <tr  
                                                 funcsyntax="COUNT(value1 ;  value2 ;  ... value20)" 
                                                 funcname="COUNT" id="func">
                                                     <td width="60%">COUNT</td>
@@ -202,6 +200,7 @@
                                                 <tr  funcsyntax="TODAY()" funcname="TODAY" id="func">
                                                     <td width="60%">TODAY</td><td nowrap="nowrap" class="dim">Date/Time</td>
                                                 </tr>
+-->
                                             </tbody>
                                         </table>
                                     </div>
@@ -225,7 +224,9 @@
                                     <table cellpadding="0" style="table-layout: fixed;" class="tblGeneric">
                                         <tbody>
                                             <tr>
-                                                <td class="secStatus " title="" id="cellStatus"></td>
+                                                <td class="secStatus" title="Range" id="cellLocationTd" style="width:40px;border-right:1px solid #C0C0C0;"  align="center"></td>
+                                                <td class="secStatus" id="cellStatus"></td>
+                                                <td class="secStatus" id="idebugger"></td>
                                             </tr>
                                        </tbody>
                                      </table>
@@ -238,11 +239,12 @@
         </tr>
     </tbody>
 </table>
+<span id="spnEditModeMsg">Now in view mode. To edit, place blip in edit mode (CTRL+E)</span>
 <script>
 	function xshowState()
 	{
 		if(wave&&wave.getState())
-			$('thestate').set('text',wave.getState())
+			$('thestate').set('text', wave.getState())
 		setTimeout(xshowState,2000);
 	}
 	//xshowState();
